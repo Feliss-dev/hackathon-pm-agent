@@ -4,7 +4,7 @@ Hệ thống AI dạng chat dành cho PM/Delivery lead. Nhận **BRD (`.md .txt 
 
 > **Nguyên tắc:** AI đọc và gợi ý; code so sánh số và kiểm tra; con người duyệt. Không có gì lên Jira khi chưa có Approve, và mọi quyết định đều có lý do và được ghi vào audit log.
 
-Hướng dẫn sử dụng từng bước: [docs/HUONG_DAN_SU_DUNG.md](docs/HUONG_DAN_SU_DUNG.md) · Mô tả nghiệp vụ: [docs/BUSINESS_DESCRIPTION.md](docs/BUSINESS_DESCRIPTION.md) · Kịch bản thuyết trình: [docs/HUONG_DAN_THUYET_TRINH.md](docs/HUONG_DAN_THUYET_TRINH.md) · Test case: [docs/TEST_CASES.md](docs/TEST_CASES.md) · Notebook ôn Hackathon: [notebooks/hackathon_workshop3.ipynb](notebooks/hackathon_workshop3.ipynb)
+**Cài đặt từ máy trắng: [docs/HUONG_DAN_CAI_DAT.md](docs/HUONG_DAN_CAI_DAT.md)** · Hướng dẫn sử dụng từng bước: [docs/HUONG_DAN_SU_DUNG.md](docs/HUONG_DAN_SU_DUNG.md) · Mô tả nghiệp vụ: [docs/BUSINESS_DESCRIPTION.md](docs/BUSINESS_DESCRIPTION.md) · Kịch bản thuyết trình: [docs/HUONG_DAN_THUYET_TRINH.md](docs/HUONG_DAN_THUYET_TRINH.md) · Test case: [docs/TEST_CASES.md](docs/TEST_CASES.md) · Notebook ôn Hackathon: [notebooks/hackathon_workshop3.ipynb](notebooks/hackathon_workshop3.ipynb)
 
 ---
 
@@ -86,7 +86,7 @@ workshop3/
 │   └── projects/KAN.md · KAN.yaml  # Rule và cài đặt riêng dự án (ưu tiên hơn rule chung)
 ├── samples/                        # BRD và Excel mẫu (make_samples.py tạo lại)
 ├── notebooks/hackathon_workshop3.ipynb   # Chạy trọn dự án, dùng đúng module của app
-├── docs/                           # Mô tả nghiệp vụ, hướng dẫn sử dụng, thuyết trình, test case
+├── docs/                           # Mô tả nghiệp vụ, hướng dẫn cài đặt và sử dụng, thuyết trình, test case
 ├── tests/                          # 68 test, không cần mạng
 ├── requirements.txt · .env.example · run_app.bat
 └── data/ (gitignore)               # app.db (SQLite) và chroma/ (vector)
@@ -206,18 +206,37 @@ Bước 12 [sync.py]        Excel đã sửa → diff → áp dụng → plan ve
 
 ## 6. Hướng Dẫn Demo (Từng Bước)
 
-### Bước 0 — Chuẩn bị (làm một lần)
+### Bước 0 — Cài đặt (làm một lần)
+
+Máy mới hoàn toàn: làm theo hướng dẫn chi tiết [docs/HUONG_DAN_CAI_DAT.md](docs/HUONG_DAN_CAI_DAT.md) (cài Git, uv, tạo `.venv`, điền `.env`, xử lý sự cố). Tóm tắt:
+
+| Cần có | Ghi chú |
+|---|---|
+| **Git** và **uv** | uv tự tải Python 3.12, không cần cài Python riêng. Cài uv: Windows `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 \| iex"`; macOS/Linux `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
+| Đĩa 4–6 GB, RAM từ 8 GB, Internet | Có `torch` và model Hugging Face |
+| `LLM_API_KEY` | Bắt buộc. Jira, Pinecone là tuỳ chọn; thiếu Jira thì app chạy ở chế độ offline |
+
 ```bash
+git clone https://github.com/Feliss-dev/hackathon-pm-agent.git && cd hackathon-pm-agent
 uv venv --python 3.12 .venv
-uv pip install --python .venv/Scripts/python.exe -r requirements.txt
-cp .env.example .env            # điền LLM_API_KEY và thông tin Jira (xem mục 8)
-.venv/Scripts/python.exe samples/make_samples.py
+
+# Windows
+uv pip install --python .venv\Scripts\python.exe -r requirements.txt
+copy .env.example .env
+.venv\Scripts\python.exe samples\make_samples.py
+
+# macOS / Linux
+uv pip install --python .venv/bin/python -r requirements.txt
+cp .env.example .env
+.venv/bin/python samples/make_samples.py
 ```
-Lần đầu dùng Hugging Face (embedding local, đọc to) thư viện tải model về máy (vài trăm MB).
+
+Mở `.env` và điền `LLM_API_KEY` (cùng thông tin Jira nếu có). Kiểm tra cài đặt: `python -m pytest -q` phải báo `68 passed` (dùng `.venv\Scripts\python.exe` hoặc `.venv/bin/python`).
 
 ### Bước 1 — Khởi động
 ```bash
-.venv/Scripts/python.exe -m streamlit run app.py --server.address localhost   # hoặc nhấp đúp run_app.bat
+.venv\Scripts\python.exe -m streamlit run app.py --server.address localhost   # Windows; hoặc nhấp đúp run_app.bat
+.venv/bin/python -m streamlit run app.py --server.address localhost            # macOS / Linux
 ```
 Mở `http://localhost:8501`. Thanh trạng thái phải là 🟢 AI · 🟢 Jira `KAN` · 🟢 Vector.
 

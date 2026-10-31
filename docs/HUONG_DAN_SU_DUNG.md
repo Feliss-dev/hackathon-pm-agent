@@ -16,11 +16,13 @@
 
 ## 2. Cài đặt (làm một lần)
 
+Hướng dẫn đầy đủ từ máy trắng (Git, uv, `.venv`, `.env`, notebook, sự cố): [HUONG_DAN_CAI_DAT.md](HUONG_DAN_CAI_DAT.md). Tóm tắt:
+
 ```bash
 uv venv --python 3.12 .venv
-uv pip install --python .venv/Scripts/python.exe -r requirements.txt
-cp .env.example .env          # rồi điền khoá, xem mục 3
-.venv/Scripts/python.exe samples/make_samples.py
+uv pip install --python .venv\Scripts\python.exe -r requirements.txt     # macOS/Linux: .venv/bin/python
+cp .env.example .env          # Windows cmd: copy .env.example .env; rồi điền khoá, xem mục 3
+.venv\Scripts\python.exe samples\make_samples.py
 ```
 
 Lần đầu dùng các tính năng Hugging Face (embedding local hoặc đọc to), thư viện tải model về máy (vài trăm MB, cần mạng).
@@ -46,7 +48,7 @@ không làm lẫn hay mất dữ liệu cũ.
 ## 4. Chạy app
 
 ```bash
-.venv/Scripts/python.exe -m streamlit run app.py --server.address localhost
+.venv\Scripts\python.exe -m streamlit run app.py --server.address localhost     # macOS/Linux: .venv/bin/python
 ```
 
 hoặc nhấp đúp `run_app.bat`, rồi mở `http://localhost:8501`.
