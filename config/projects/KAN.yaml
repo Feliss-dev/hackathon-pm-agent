@@ -1,0 +1,4 @@
+# Cấu hình kỹ thuật riêng dự án KAN - chỉ chứa phần khác so với config/settings.yaml.
+# Rule phân loại / estimate của dự án nằm trong KAN.md (viết bằng ngôn ngữ tự nhiên).
+jira:
+  project_key: KAN

@@ -1,0 +1,22 @@
+Standard API URL
+https://aiportalapi.stu-platform.live/jpe
+Semantic Cache
+https://aiportalapi.stu-platform.live/jpe/v2
+ 
+API KEY: .env
+ 
+Python:
+from openai import OpenAI
+ 
+client = OpenAI(
+    base_url="https://aiportalapi.stu-platform.live/jpe/v2",
+    api_key=""
+)
+ 
+response = client.responses.create(
+    model="DeepSeek-V4.1-Flash",
+    input="Hello!"
+)
+ 
+print(response.output_text)
+ 

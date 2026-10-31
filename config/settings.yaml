@@ -1,0 +1,85 @@
+# Delivery Planning Agent - technical settings (Jira, Excel, validation, workshop).
+# Classification and estimate RULES are not here: they are written in plain language in config/rules.md
+# (and config/projects/<NAME>.md) and applied by the AI.
+# Per-project overrides of these settings: config/projects/<NAME>.yaml (only the keys that differ).
+
+estimation:
+  hours_per_day: 8      # converts "3d" -> 24h
+  hours_per_week: 40    # converts "1w" -> 40h
+
+validation:
+  required_fields: [title, assignee, estimate, category]
+  # Missing blocking fields keep a task out of Jira; other required fields only warn
+  # (a task without assignee is created unassigned).
+  blocking_fields: [title, estimate, category]
+  duplicate_threshold: 85     # percent, rapidfuzz token_sort_ratio on normalised titles
+  # Meaning-based duplicate check against tasks of EARLIER runs of the same project (vector store, cosine 0-1).
+  # A match that already has a Jira key blocks creation; other matches only warn.
+  semantic_threshold: 0.88
+
+jira:
+  project_key: KAN
+  # Jira MCP tools offered to the chat agent (jira_tools.py): approve = writes wait for a person (default),
+  # allow = the agent may write directly, deny = read-only.
+  agent_write_policy: approve
+  # JQL used to load existing issues for duplicate detection. {project} is substituted.
+  duplicate_search_jql: 'project = {project} AND statusCategory != Done ORDER BY created DESC'
+  duplicate_search_limit: 200
+  sprint_field: customfield_10020      # Jira Cloud default Sprint field
+  story_issue_type: Story
+  epic_issue_type: Epic
+  subtask_issue_type: Subtask
+  # Standard Jira only allows Epic as the parent of a Task. "epic" (default) parents tasks to the epic and
+  # adds a story_link_type link to their story; "story" sets the story as parent (needs a custom hierarchy).
+  task_parent: epic
+  story_link_type: Relates
+  # Category -> Jira work item. issue_type must exist in your Jira project.
+  # "type_name" is the delivery name shown in the plan (e.g. "Backend Task") and is also added as a label.
+  category_mapping:
+    BA:        { type_name: Business Analysis Task, issue_type: Task, labels: [business-analysis], components: [] }
+    SA:        { type_name: Solution Architecture Task, issue_type: Task, labels: [solution-architecture], components: [] }
+    FE:        { type_name: Frontend Task, issue_type: Task, labels: [frontend], components: [] }
+    BE:        { type_name: Backend Task, issue_type: Task, labels: [backend], components: [] }
+    UT:        { type_name: Unit Test Task, issue_type: Task, labels: [unit-test], components: [] }
+    Testing:   { type_name: Testing Task, issue_type: Task, labels: [testing], components: [] }
+    Migration: { type_name: Migration Task, issue_type: Task, labels: [migration], components: [] }
+    default:   { type_name: Task, issue_type: Task, labels: [], components: [] }
+  common_labels: [ai-planned]
+  # Tool names exposed by your Jira MCP server. Defaults match sooperset/mcp-atlassian.
+  # If you use another server (e.g. Atlassian Remote MCP), change the names and `arg_style`.
+  mcp_tools:
+    search: jira_search
+    create_issue: jira_create_issue
+    link_issues: jira_create_issue_link
+    update_issue: jira_update_issue      # optional: pushes Excel-sync changes to issues already in Jira
+  link_dependencies: true
+  dependency_link_type: Blocks
+
+excel:
+  header_scan_rows: 15
+  product_header: [Product]
+  title_headers: [Task, Task Name, Title, Summary, Task Title]
+  description_headers: [Description, Detail, Details, Note, Notes]
+  assignee_headers: [Assignee, Owner, PIC, Assigned To, Resource]
+  estimate_headers: [Estimate, Estimate (h), Estimation, Effort, Effort (h), Hours, Est, Original Estimate]
+  acceptance_headers: [Acceptance Criteria, AC]
+  dependency_headers: [Dependency, Dependencies, Depends On]
+  story_headers: [Story, Feature, User Story, Module]
+  # Azure DevOps "task review" template: Work Item Type | ID | Parent | Title 1 | Title 2 | Assigned To | State |
+  # Story Points | Original Estimate | Completed Work | Remaining Work | Iteration Path
+  # "Title 1..N" columns are detected automatically as tree levels.
+  type_headers: [Work Item Type, Issue Type, Type]
+  id_headers: [ID, Key]
+  parent_headers: [Parent, Parent ID]
+  state_headers: [State, Status]
+  # Rows of these types group tasks (become Jira Stories) instead of being tasks themselves.
+  container_types: [Epic, Feature, User Story, Product Backlog Item, Requirement]
+  skip_states: [Removed]
+
+workshop:
+  source_extensions: [.py, .java, .js, .ts, .tsx, .jsx, .cs, .go, .rb, .php, .kt, .sql, .html, .vue]
+  business_keywords: [business, brd, requirement, description, overview, readme]
+  task_list_keywords: [task]
+  test_case_keywords: [test case, testcase, test_case, test-case, tests]
+  slides_extensions: [.pptx, .ppt, .key]
+  gitlab_url_pattern: 'https?://[\w.-]*gitlab[\w.-]*/[\w./-]+'
